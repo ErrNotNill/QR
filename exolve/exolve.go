@@ -12,6 +12,18 @@ import (
 	"time"
 )
 
+func SendSms(w http.ResponseWriter, r *http.Request) {
+	var message models.IncomingMessage
+	bs, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Println("error reading message")
+	}
+	err = json.Unmarshal(bs, &message)
+	if err != nil {
+		log.Println("error unmarshaling message: ", err)
+	}
+}
+
 func CreateBody(datestart string) []byte {
 	dateGte, err := time.Parse(time.RFC3339, datestart)
 	if err != nil {

@@ -2,6 +2,7 @@ package amocrm
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/alexeykhan/amocrm"
 	"io"
@@ -88,4 +89,27 @@ func CreateAmoClient() {
 	fmt.Println("refresh_token:", token.RefreshToken())
 	fmt.Println("token_type:", token.TokenType())
 	fmt.Println("expires_at:", token.ExpiresAt().Unix())
+}
+
+func RedirectHandler(w http.ResponseWriter, r *http.Request) {
+	var token Token
+	bs, _ := io.ReadAll(r.Body)
+	jsonData := json.Unmarshal(bs, &token)
+	if jsonData != nil {
+		fmt.Println("Message received successfully")
+	}
+	log.Println("response:", token)
+}
+
+func AmoConn(w http.ResponseWriter, r *http.Request) {
+	bs, _ := io.ReadAll(r.Body)
+	w.Write(bs)
+	w.WriteHeader(200)
+	jsonData, err := json.Marshal(bs)
+	if jsonData != nil {
+		fmt.Println("Message received successfully")
+	}
+	if err != nil {
+		log.Println("error marsh sending message: ", err)
+	}
 }
