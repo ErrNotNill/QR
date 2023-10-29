@@ -4,41 +4,38 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/alexeykhan/amocrm"
 	"io"
 	"log"
 	"net/http"
+	"net/url"
+	"qr/amocrm/models"
 )
 
-type Token struct {
-	TokenType    string `json:"token_type"`
-	ExpiresIn    int    `json:"expires_in"`
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-}
+var AccessToken string
+var RefreshToken string
 
-func NewAuth() {
-	subdomain := "onvizbitrix"
-	link := "https://" + subdomain + ".amocrm.ru/oauth2/access_token"
+func GetToken() {
+	uri := `https://onvizbitrix.amocrm.ru/oauth2/access_token`
 
-	data := map[string]string{
-		"client_id":     "250e6632-c2d2-4986-93a1-e9bd16002327",
-		"client_secret": "f6edVVFGIZKEPiAabNTknkALBsqdmTpYAPRD0WEixrA6BLtIA5WMZIQnFZKaT1xT",
-		"grant_type":    "authorization_code",
-		"code":          "def5020007223ff71807070f757754801e4b250513c1f6e9981a010860d94370fc57567ba043d8c88df99e7860a4b80c9cb7a885fa0c006647033adbdf7d93698df1045c8b8f5f5d96d5b2e135da14e8ef7e6311458429f9c7de9681c0d79c4d12bd55f28430878982543ddf2773cead1f4fc6bccb83c7dba1af1feddc0b4b2b9322c81a401b31148dc95556ee0554bf2b138bd595888472f9452da4b8bfea407292267a225b7b0f2575a1015fa35765103a792e63f276a795e0132211e2cab2f71267354e937ce3e62f265efee557239acdda66e8e10ce64f41d3c4e4de553cc5d1a932021d07766a6f13699a1e0774c233afa059cd4618c097961dcc642811124eafe70245ceb90ca933651ba527fefe03aabd698c257d56c863d8f41b70a28646fbd65d3d9867d9af31fce8d72f81561847013fe6caa2d3d8302b8c2155bfce4952d2bb641082abb0fad6d782ff8a5964acbb5945f79fc763e0938b2f2b67b33e977ad7cc3d1b2bd727cabd1baf6c1fc8812acc901e4afd3c77f7c755cb888d3a74e05fdc18733e1b1fbd44195bda228db5dd71f6684f491ba7da2c3e3da0a7063fadd78716f286fe2f54fed44ba53d1a958be9fdc0cf2f59c8f2bcf7e792442833cef319946967111ae96b47905be331d90b3406ea0ba4e77a525387e33e81c9e42c87a2a067852bb8aa630745",
-		"redirect_uri":  "https://onviz-api.ru/redirect",
-	}
+	clientID := `c696f967-94ea-4a47-968a-23ee138adf95`
+	grantType := `authorization_code`
+	clientSecret := `5uhpb6HXKoZVQ1z9gtONKiRTeloINnKxXVbFkisalm51pu1SkhJsxJyLAnxil9Tu`
+	code := `def5020089919e0c7466890f7470826cfbdb71a4316958e6af5d98c5ba10628bcaf2dcea3c48f3a71be6181e618a56239529fbe51f90df427ac3fa64a5b41fcbb5ced55c81badb6ed926d5b9d4c034e3026ee27a49b5f83dfbb409c4e8e56e38007462ceca75a07ad340eb976665a33e4a690ab0fe113b2ee10afb0e38830a1f7336972ecfa9bdb24af13c0cf63db9a547dafcc0f9a5127a3122fc3a0cd054387ff2e78f807e4edd0aabf9dc38085cc0049f29c04548a7c157d99eb9724e653e633480302b321bd29e6b7080d80375489a0bcea7e2721890e610165a0e6edfa333870720fc709090999125e9742da8bb88592bcee241198562d9fd2ad079b1ee224176820e0759d0c1d08d5ceabe3f84ad98a9663464c790cf39390d4dfe29846436ba9b263675947daee8531c0a419d74d81c96ece52e43f39122bfa0e0f9355b606c17cf80c6442ce7680098cc139303e490898b2d6e300322e1537807049aaa27a48e27315afce0560c6ddd31170e6703fdf433ee11ebbe525ebd3f5ddf8c61bb6972b2535ad1494f4f617029a92bcf99362beeb4d7578dfcc22985d81f77698a28e0ef840e003d0b11e06a7ee4c48f9b41e8eb90ecafa128a4ab2f7d4d65b96755bf77632a3334e1cd47651850196d0e4aa0671fdca454c57113774445597173bb6230f5189371e9dcf7c0ded0`
+	redirectUri := `https://onviz-api.ru/amo_deal`
 
-	payload, _ := json.Marshal(data)
+	form := url.Values{}
+	form.Add("client_id", clientID)
+	form.Add("grant_type", grantType)
+	form.Add("client_secret", clientSecret)
+	form.Add("code", code)
+	form.Add("redirect_uri", redirectUri)
 
-	req, err := http.NewRequest("POST", link, bytes.NewBuffer(payload))
+	req, err := http.NewRequest("POST", uri, bytes.NewBufferString(form.Encode()))
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User-Agent", "amoCRM-oAuth-client/1.0")
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -48,132 +45,214 @@ func NewAuth() {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode < 200 || resp.StatusCode > 204 {
-		fmt.Println("Error:", resp.Status)
-		return
-	}
-
+	// Handle the response here
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Println(err)
-		return
+		log.Println(err)
 	}
-
-	var response map[string]interface{}
+	var response models.Token
 	err = json.Unmarshal(body, &response)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("Error unmarshaling JSON:", err)
 		return
 	}
 
-	access_token, _ := response["access_token"].(string)
-	refresh_token, _ := response["refresh_token"].(string)
-	token_type, _ := response["token_type"].(string)
-	expires_in, _ := response["expires_in"].(float64)
+	// Access the fields in the struct
+	fmt.Println("Token Type:", response.TokenType)
+	fmt.Println("Expires In:", response.ExpiresIn)
+	fmt.Println("Access Token:", response.AccessToken)
+	fmt.Println("Refresh Token:", response.RefreshToken)
 
-	fmt.Println("Access Token:", access_token)
-	fmt.Println("Refresh Token:", refresh_token)
-	fmt.Println("Token Type:", token_type)
-	fmt.Println("Expires In:", expires_in)
+	AccessToken = response.AccessToken
+	RefreshToken = response.RefreshToken
+
+	// Check response status code
+	if resp.StatusCode != http.StatusOK {
+		fmt.Printf("Request failed with status: %s\n", resp.Status)
+	} else {
+		fmt.Println("Request successful!")
+	}
 }
 
-func GetToken() {
-	uri := `https://onvizbitrix.amocrm.ru/oauth2/access_token`
+func DealCreate() {
 
-	data := map[string]string{
-		"client_id":     "250e6632-c2d2-4986-93a1-e9bd16002327",
-		"client_secret": "f6edVVFGIZKEPiAabNTknkALBsqdmTpYAPRD0WEixrA6BLtIA5WMZIQnFZKaT1xT",
-		"grant_type":    "authorization_code",
-		"code":          "def5020007223ff71807070f757754801e4b250513c1f6e9981a010860d94370fc57567ba043d8c88df99e7860a4b80c9cb7a885fa0c006647033adbdf7d93698df1045c8b8f5f5d96d5b2e135da14e8ef7e6311458429f9c7de9681c0d79c4d12bd55f28430878982543ddf2773cead1f4fc6bccb83c7dba1af1feddc0b4b2b9322c81a401b31148dc95556ee0554bf2b138bd595888472f9452da4b8bfea407292267a225b7b0f2575a1015fa35765103a792e63f276a795e0132211e2cab2f71267354e937ce3e62f265efee557239acdda66e8e10ce64f41d3c4e4de553cc5d1a932021d07766a6f13699a1e0774c233afa059cd4618c097961dcc642811124eafe70245ceb90ca933651ba527fefe03aabd698c257d56c863d8f41b70a28646fbd65d3d9867d9af31fce8d72f81561847013fe6caa2d3d8302b8c2155bfce4952d2bb641082abb0fad6d782ff8a5964acbb5945f79fc763e0938b2f2b67b33e977ad7cc3d1b2bd727cabd1baf6c1fc8812acc901e4afd3c77f7c755cb888d3a74e05fdc18733e1b1fbd44195bda228db5dd71f6684f491ba7da2c3e3da0a7063fadd78716f286fe2f54fed44ba53d1a958be9fdc0cf2f59c8f2bcf7e792442833cef319946967111ae96b47905be331d90b3406ea0ba4e77a525387e33e81c9e42c87a2a067852bb8aa630745",
-		"redirect_uri":  "https://onviz-api.ru/redirect",
+	subdomain := "onvizbitrix"
+
+	leadData := `[
+    {
+        "name": "Сделка для примера 1",
+        "created_by": 0,
+        "price": 20000,
+        "custom_fields_values": [
+            {
+                "field_id": 294471,
+                "values": [
+                    {
+                        "value": "Наш первый клиент"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Сделка для примера 2",
+        "price": 10000,
+        "_embedded": {
+            "tags": [
+                {
+                    "id": 2719
+                }
+            ]
+        }
+    }
+]`
+
+	leadJSON, err := json.Marshal(leadData)
+	if err != nil {
+		fmt.Println("Error marshaling lead data:", err)
+		return
 	}
 
-	payload, _ := json.Marshal(data)
-	req, err := http.NewRequest("POST", uri, bytes.NewBuffer(payload))
-	if err != nil {
-		log.Println("error creating request")
-	}
-	req.Header.Add("Content-Type", "application/json")
+	apiEndpoint := fmt.Sprintf("https://%s.amocrm.ru/api/v4/leads", subdomain)
 
-	resp, err := http.DefaultClient.Do(req)
+	req, err := http.NewRequest("POST", apiEndpoint, bytes.NewBuffer(leadJSON))
 	if err != nil {
-		log.Println(err)
+		fmt.Println("Error creating request:", err)
+		return
+	}
+
+	fmt.Println("ACCESS_TOKEN>>>>>> ", AccessToken)
+	//req.Header.Set("Authorization", "Bearer "+AccessToken)
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println("Error making the request:", err)
 		return
 	}
 	defer resp.Body.Close()
 
-	bodyRead, err := io.ReadAll(resp.Body)
-	if err != nil {
-		log.Println(err)
+	fmt.Println("resp.StatusCode", resp.StatusCode)
+	fmt.Println("resp.StatusCode", resp.StatusCode)
+	if resp.StatusCode != http.StatusCreated {
+		fmt.Printf("Lead creation failed with status code %d\n", resp.StatusCode)
 		return
 	}
 
-	// 'body' now contains the response data as a byte slice
-	// You can convert it to a string if needed
-	responseText := string(bodyRead)
-	fmt.Println("responseText: ", responseText)
-	/*var token Token
-	bs, _ := io.ReadAll(r.Body)
-	jsonData := json.Unmarshal(bs, &token)
-	if jsonData != nil {
-		fmt.Println("Message received successfully")
-	}
-	log.Println("response:", token)*/
+	fmt.Println("Lead created successfully!")
 }
 
-func CreateAmoClient() {
+func DealCreateHandler(w http.ResponseWriter, r *http.Request) {
 
-	clientID := "250e6632-c2d2-4986-93a1-e9bd16002327"
-	clientSecret := "f6edVVFGIZKEPiAabNTknkALBsqdmTpYAPRD0WEixrA6BLtIA5WMZIQnFZKaT1xT"
-	//grantType := "grant_type":    "authorization_code",
-	//authCode :=  "def5020007223ff71807070f757754801e4b250513c1f6e9981a010860d94370fc57567ba043d8c88df99e7860a4b80c9cb7a885fa0c006647033adbdf7d93698df1045c8b8f5f5d96d5b2e135da14e8ef7e6311458429f9c7de9681c0d79c4d12bd55f28430878982543ddf2773cead1f4fc6bccb83c7dba1af1feddc0b4b2b9322c81a401b31148dc95556ee0554bf2b138bd595888472f9452da4b8bfea407292267a225b7b0f2575a1015fa35765103a792e63f276a795e0132211e2cab2f71267354e937ce3e62f265efee557239acdda66e8e10ce64f41d3c4e4de553cc5d1a932021d07766a6f13699a1e0774c233afa059cd4618c097961dcc642811124eafe70245ceb90ca933651ba527fefe03aabd698c257d56c863d8f41b70a28646fbd65d3d9867d9af31fce8d72f81561847013fe6caa2d3d8302b8c2155bfce4952d2bb641082abb0fad6d782ff8a5964acbb5945f79fc763e0938b2f2b67b33e977ad7cc3d1b2bd727cabd1baf6c1fc8812acc901e4afd3c77f7c755cb888d3a74e05fdc18733e1b1fbd44195bda228db5dd71f6684f491ba7da2c3e3da0a7063fadd78716f286fe2f54fed44ba53d1a958be9fdc0cf2f59c8f2bcf7e792442833cef319946967111ae96b47905be331d90b3406ea0ba4e77a525387e33e81c9e42c87a2a067852bb8aa630745"
-	redirectUri := "https://onviz-api.ru/amo_deal"
+	subdomain := "onvizbitrix"
 
-	accessToken := "def50200836cea7fdf4571649c804979a65dd5b0776fc8201c8c66120670303e5b052505e98ea22e5d5ac9b75881fffef780cd1175257ee049afc3132e8b1faca7ea95d31657546ea50b878238b31bd6593bc4ded65d79a11fe5d637472d820766a40547d24f789c83fca6c1da65b06635a21cfa93256630d02cf8cdc0e9896415f5e1f7143fd1a34a76d97600f32de3ab95086a85a58d3dee54451601f37b52d44bd5ca8762906804831f4a94f666b662dcca60bcbfc682f12965d24947d3a0c8708c9fed28c69008193a1bbafb28c301df33033b397a21dbb581ab9cbd982394146e25b2b906ebb13d7cade17e371ba5191c4ba1f3f40cee65d6e0f88f65765c8113fcfa057e763bcc5a0212eff36a05d98e56907d5de1d1b97a6ff791e7787fee41ce0416f1055526f562bc9cc2da9ad7a4091623289bc48ed4ff801818980d795c9de4628a8c0f3e8d5fe9b9fb0d5a7dcf16b25e3c9ce7c5fead6802d30ab664230f02345043bb27ee6d8d6e1496dcb4eb9ad40f9904f8178f1962bbcfccebd2a769f40bfcfff211293a8e079a36d8dd3116d65896e6ba00dfae86927902923ef64ed871ac75c7ca794bceddac26d8f5c424839d945e2ff672866fd27da10d22fd7d8c5cb16cd002fcb99e956cbbb0f8b7e7f7d5f79b9f08a777a169a329a6da1c7759e71dd1488f1099e4cf21"
-	amoCRM := amocrm.New(clientID, clientSecret, redirectUri)
-	//state := amocrm.RandomState()  // store this state as a session identifier
-	mode := amocrm.PostMessageMode // options: PostMessageMode, PopupMode
-	authURL, err := amoCRM.AuthorizeURL("8d09edf332cf73a06bb3b6ca95cbf1d0", mode)
+	leadData := `[
+    {
+        "name": "Сделка для примера 1",
+        "created_by": 0,
+        "price": 20000,
+        "custom_fields_values": [
+            {
+                "field_id": 294471,
+                "values": [
+                    {
+                        "value": "Наш первый клиент"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Сделка для примера 2",
+        "price": 10000,
+        "_embedded": {
+            "tags": [
+                {
+                    "id": 2719
+                }
+            ]
+        }
+    }
+]`
+
+	leadJSON, err := json.Marshal(leadData)
 	if err != nil {
-		fmt.Println("failed to get auth url:", err)
+		fmt.Println("Error marshaling lead data:", err)
 		return
 	}
-	fmt.Println("Redirect user to this URL:")
-	fmt.Println(authURL)
-	if err := amoCRM.SetDomain("https://onvizbitrix.amocrm.ru"); err != nil {
-		fmt.Println("set domain:", err)
-		return
-	}
-	token, err := amoCRM.TokenByCode(accessToken)
+
+	apiEndpoint := fmt.Sprintf("https://%s.amocrm.ru/api/v4/leads", subdomain)
+
+	req, err := http.NewRequest("POST", apiEndpoint, bytes.NewBuffer(leadJSON))
 	if err != nil {
-		fmt.Println("get token by code:", err)
+		fmt.Println("Error creating request:", err)
 		return
 	}
-	fmt.Println("access_token:", token.AccessToken())
-	fmt.Println("refresh_token:", token.RefreshToken())
-	fmt.Println("token_type:", token.TokenType())
-	fmt.Println("expires_at:", token.ExpiresAt().Unix())
+
+	fmt.Println("ACCESS_TOKEN>>>>>> ", AccessToken)
+	//req.Header.Set("Authorization", "Bearer "+AccessToken)
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println("Error making the request:", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusCreated {
+		fmt.Printf("Lead creation failed with status code %d\n", resp.StatusCode)
+		return
+	}
+
+	fmt.Println(r.Body)
+	sb, _ := io.ReadAll(resp.Body)
+	w.Write(sb)
+	fmt.Println("Lead created successfully!")
 }
 
-func RedirectHandler(w http.ResponseWriter, r *http.Request) {
-	var token Token
-	bs, _ := io.ReadAll(r.Body)
-	jsonData := json.Unmarshal(bs, &token)
-	if jsonData != nil {
-		fmt.Println("Message received successfully")
-	}
-	log.Println("response:", token)
-}
+func DealCreateWithPipeLine(w http.ResponseWriter, r *http.Request) {
+	subdomain := "onvizbitrix"
 
-func AmoConn(w http.ResponseWriter, r *http.Request) {
-	bs, _ := io.ReadAll(r.Body)
-	w.Write(bs)
-	w.WriteHeader(200)
-	jsonData, err := json.Marshal(bs)
-	if jsonData != nil {
-		fmt.Println("Message received successfully")
+	// Define the lead data in a map
+	leadData := map[string]interface{}{
+		"name":        "NewLeadName",
+		"pipeline_id": 7407690, // Replace with the actual pipeline ID
+		// Add any other required lead data here
 	}
+
+	leadJSON, err := json.Marshal(leadData)
 	if err != nil {
-		log.Println("error marsh sending message: ", err)
+		fmt.Println("Error marshaling lead data:", err)
+		return
 	}
+
+	apiEndpoint := fmt.Sprintf("https://%s.amocrm.ru/api/v4/leads", subdomain)
+
+	req, err := http.NewRequest("POST", apiEndpoint, bytes.NewBuffer(leadJSON))
+	if err != nil {
+		fmt.Println("Error creating request:", err)
+		return
+	}
+
+	fmt.Println("ACCESS_TOKEN>>>>>> ", AccessToken)
+	req.Header.Set("Authorization", "Bearer "+AccessToken)
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println("Error making the request:", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusCreated {
+		fmt.Printf("Lead creation failed with status code %d\n", resp.StatusCode)
+		return
+	}
+
+	fmt.Println("Lead created successfully!")
 }

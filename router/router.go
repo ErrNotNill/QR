@@ -9,9 +9,11 @@ import (
 
 func InitRoutes() {
 	http.HandleFunc("/generate", qr.HandleRequest)
+	http.HandleFunc("/deal", amocrm.DealCreateHandler)
+	http.HandleFunc("/deal_pipe", amocrm.DealCreateWithPipeLine)
 
-	http.HandleFunc("/amo_deal", amocrm.AmoConn)
-	http.HandleFunc("/redirect", amocrm.RedirectHandler)
+	/*http.HandleFunc("/amo_deal", amocrm.AmoConn)
+	http.HandleFunc("/redirect", amocrm.RedirectHandler)*/
 
 	http.HandleFunc("/send_sms", exolve.SendSms)
 
