@@ -14,6 +14,7 @@ func main() {
 	router.InitRoutes()
 
 	amocrm.GetToken()
+	amocrm.RefreshTokenAuth()
 	amocrm.DealCreate()
 
 	http.ListenAndServe(":9090", nil)
