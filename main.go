@@ -5,13 +5,14 @@ import (
 	"github.com/alexeykhan/amocrm"
 	"net/http"
 	"qr/qr"
+	"qr/router"
 )
 
 func main() {
 
 	qr.CreateQR()
 
-	//router.InitRoutes()
+	router.InitRoutes()
 	CreateAmoClient()
 
 	http.ListenAndServe(":8080", nil)

@@ -32,17 +32,30 @@ func CreateQR() {
 	qrCodeFile.Write(codeData)
 }
 
-func HandleRequest(writer http.ResponseWriter, request *http.Request) {
-	request.ParseMultipartForm(10 << 20)
+func AmoConn(w http.ResponseWriter, r *http.Request) {
+	bs, _ := io.ReadAll(r.Body)
+	w.Write(bs)
+	w.WriteHeader(200)
+	jsonData, err := json.Marshal(bs)
+	if jsonData != nil {
+		fmt.Println("Message received successfully")
+	}
+	if err != nil {
+		log.Println("error marsh sending message: ", err)
+	}
+}
+
+func HandleRequest(w http.ResponseWriter, r *http.Request) {
+	r.ParseMultipartForm(10 << 20)
 	sendSms := `smsto:+79587329155`
 	var size, content string = "256", sendSms
 	var codeData []byte
 
-	writer.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 
 	if content == "" {
-		writer.WriteHeader(400)
-		json.NewEncoder(writer).Encode(
+		w.WriteHeader(400)
+		json.NewEncoder(w).Encode(
 			"Could not determine the desired QR code content.",
 		)
 		return
@@ -50,29 +63,29 @@ func HandleRequest(writer http.ResponseWriter, request *http.Request) {
 
 	qrCodeSize, err := strconv.Atoi(size)
 	if err != nil || size == "" {
-		writer.WriteHeader(400)
-		json.NewEncoder(writer).Encode("Could not determine the desired QR code size.")
+		w.WriteHeader(400)
+		json.NewEncoder(w).Encode("Could not determine the desired QR code size.")
 		return
 	}
 
 	qrCode := simpleQRCode{Content: content, Size: qrCodeSize}
 	codeData, err = qrCode.Generate()
 	if err != nil {
-		writer.WriteHeader(400)
-		json.NewEncoder(writer).Encode(
+		w.WriteHeader(400)
+		json.NewEncoder(w).Encode(
 			fmt.Sprintf("Could not generate QR code. %v", err),
 		)
 		return
 	}
 
-	writer.Header().Set("Content-Type", "image/png")
+	w.Header().Set("Content-Type", "image/png")
 
 	// Save the QR code as a .png file
 	qrCodeFileName := "qrcode.png"
 	qrCodeFile, err := os.Create(qrCodeFileName)
 	if err != nil {
-		writer.WriteHeader(500)
-		writer.Write([]byte("Failed to create QR code file"))
+		w.WriteHeader(500)
+		w.Write([]byte("Failed to create QR code file"))
 		return
 	}
 	defer qrCodeFile.Close()
@@ -80,16 +93,16 @@ func HandleRequest(writer http.ResponseWriter, request *http.Request) {
 
 	// Now, the QR code is saved as "qrcode.png" in the current working directory
 
-	writer.Write(codeData)
+	w.Write(codeData)
 
 	var message models.Message
-	if request.Method == "POST" {
-		bs, _ := io.ReadAll(request.Body)
+	if r.Method == "POST" {
+		bs, _ := io.ReadAll(r.Body)
 		if bs != nil {
 			//exolve.GetCount()
 			exolve.GetList()
-			writer.Write(bs)
-			writer.WriteHeader(200)
+			w.Write(bs)
+			w.WriteHeader(200)
 			jsonData := json.Unmarshal(bs, &message)
 			if jsonData != nil {
 				fmt.Println("Message received successfully")
