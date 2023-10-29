@@ -20,7 +20,7 @@ func main() {
 }
 
 func CreateAmoClient() {
-	amoCRM := amocrm.New("dc7037a7-7f4e-4c5c-bbad-a93d1b3774d5", "fhieUsfUTyKmlROK7KeumLDQLb6VvCc1c7WI2f8GHo8xmpLhyrgLN1GwPsUR4CCB", "")
+	amoCRM := amocrm.New("dc7037a7-7f4e-4c5c-bbad-a93d1b3774d5", "fhieUsfUTyKmlROK7KeumLDQLb6VvCc1c7WI2f8GHo8xmpLhyrgLN1GwPsUR4CCB", "https://onviz-api.ru/amo_deal")
 	state := amocrm.RandomState()  // store this state as a session identifier
 	mode := amocrm.PostMessageMode // options: PostMessageMode, PopupMode
 
