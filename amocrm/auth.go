@@ -17,10 +17,10 @@ var RefreshToken string
 func GetToken() {
 	uri := `https://onvizbitrix.amocrm.ru/oauth2/access_token`
 
-	clientID := `c696f967-94ea-4a47-968a-23ee138adf95`
+	clientID := `1fffc59d-f083-42c7-804e-5e97f954a3a9`
 	grantType := `authorization_code`
-	clientSecret := `5uhpb6HXKoZVQ1z9gtONKiRTeloINnKxXVbFkisalm51pu1SkhJsxJyLAnxil9Tu`
-	code := `def5020089919e0c7466890f7470826cfbdb71a4316958e6af5d98c5ba10628bcaf2dcea3c48f3a71be6181e618a56239529fbe51f90df427ac3fa64a5b41fcbb5ced55c81badb6ed926d5b9d4c034e3026ee27a49b5f83dfbb409c4e8e56e38007462ceca75a07ad340eb976665a33e4a690ab0fe113b2ee10afb0e38830a1f7336972ecfa9bdb24af13c0cf63db9a547dafcc0f9a5127a3122fc3a0cd054387ff2e78f807e4edd0aabf9dc38085cc0049f29c04548a7c157d99eb9724e653e633480302b321bd29e6b7080d80375489a0bcea7e2721890e610165a0e6edfa333870720fc709090999125e9742da8bb88592bcee241198562d9fd2ad079b1ee224176820e0759d0c1d08d5ceabe3f84ad98a9663464c790cf39390d4dfe29846436ba9b263675947daee8531c0a419d74d81c96ece52e43f39122bfa0e0f9355b606c17cf80c6442ce7680098cc139303e490898b2d6e300322e1537807049aaa27a48e27315afce0560c6ddd31170e6703fdf433ee11ebbe525ebd3f5ddf8c61bb6972b2535ad1494f4f617029a92bcf99362beeb4d7578dfcc22985d81f77698a28e0ef840e003d0b11e06a7ee4c48f9b41e8eb90ecafa128a4ab2f7d4d65b96755bf77632a3334e1cd47651850196d0e4aa0671fdca454c57113774445597173bb6230f5189371e9dcf7c0ded0`
+	clientSecret := `gLhk8pHSg1p8VXK9WdAQRTXFDnaepQ6PNLkVgrlaL0jLs3fEpMzd8HDMZn0bA9i1`
+	code := `def502008a42435d716418febdd48f79c7d3ad996277f6913478a37888619f709b00b5f8accd3dbf3af3d2e29c6c2929cecac3abc32e592266599f35cb482461603028c8c90af5266c144ab20f021932badc0b287cc29393b7b8ba8b8ed44a2040de6fbe9c2f99cc9ae8764fe28bf1affa313878ec6c97cb846ddb1dcfd2ee65b8d0bcd2f70d75968e4e2a2e9a7e68bcd2b994f3d6d8534af087b1dedf67808c8f72564f38cdca4284d0405ccc60e6f195e973e9da61d7aa510e7e0e6b68f3f6a82bcd5bd4878d702e37c999d87f3da4bada966e19fa11029dbfb6c31bd3dec6b69ffce613d5ecdfcb2dd469458b859b3f44d2b3185d1385b41f624442c1447bf2610df43069024b2cad9dcfbffd685dbe30c37086da1ba935ce238c9c24ce845b2165a851e82570cc99859732359f2b1b0505da2a27384ddcf5a14a10f0e6456c7d5b1f379324ffd6b5fce2784c008978bd4c62ed9c0875b63bf5c933b6fe31058b846e2c2697ccc7e348bbdbc5cbb6bc889b3a1efc95d599a57bfbc16fe9121fa11b6d0a7a163d9896f08d304cbcf87b1d165cca9b16beaa5759590be4a72c85c5c9ea40df5950e996a7d5b016660bbb30387b7b100c3c43cb43a49d756d5bbb0e51dda6f1c7be9eae4f135e9fdaedb2dd8a26fcfdf2888490f217cd44a126673f2edd89ac4813ea3285`
 	redirectUri := `https://onviz-api.ru/amo_deal`
 
 	form := url.Values{}
@@ -107,22 +107,18 @@ func DealCreate() {
     }
 ]`
 
-	leadJSON, err := json.Marshal(leadData)
-	if err != nil {
-		fmt.Println("Error marshaling lead data:", err)
-		return
-	}
-
+	data := []byte(leadData)
+	r := bytes.NewReader(data)
 	apiEndpoint := fmt.Sprintf("https://%s.amocrm.ru/api/v4/leads", subdomain)
 
-	req, err := http.NewRequest("POST", apiEndpoint, bytes.NewBuffer(leadJSON))
+	req, err := http.NewRequest("POST", apiEndpoint, r)
 	if err != nil {
 		fmt.Println("Error creating request:", err)
 		return
 	}
 
 	fmt.Println("ACCESS_TOKEN>>>>>> ", AccessToken)
-	//req.Header.Set("Authorization", "Bearer "+AccessToken)
+	req.Header.Set("Authorization", "Bearer "+AccessToken)
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
@@ -176,15 +172,12 @@ func DealCreateHandler(w http.ResponseWriter, r *http.Request) {
     }
 ]`
 
-	leadJSON, err := json.Marshal(leadData)
-	if err != nil {
-		fmt.Println("Error marshaling lead data:", err)
-		return
-	}
+	data := []byte(leadData)
+	rs := bytes.NewReader(data)
 
 	apiEndpoint := fmt.Sprintf("https://%s.amocrm.ru/api/v4/leads", subdomain)
 
-	req, err := http.NewRequest("POST", apiEndpoint, bytes.NewBuffer(leadJSON))
+	req, err := http.NewRequest("POST", apiEndpoint, rs)
 	if err != nil {
 		fmt.Println("Error creating request:", err)
 		return
