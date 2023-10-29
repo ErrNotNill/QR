@@ -32,19 +32,6 @@ func CreateQR() {
 	qrCodeFile.Write(codeData)
 }
 
-func AmoConn(w http.ResponseWriter, r *http.Request) {
-	bs, _ := io.ReadAll(r.Body)
-	w.Write(bs)
-	w.WriteHeader(200)
-	jsonData, err := json.Marshal(bs)
-	if jsonData != nil {
-		fmt.Println("Message received successfully")
-	}
-	if err != nil {
-		log.Println("error marsh sending message: ", err)
-	}
-}
-
 func HandleRequest(w http.ResponseWriter, r *http.Request) {
 	r.ParseMultipartForm(10 << 20)
 	sendSms := `smsto:+79587329155`
