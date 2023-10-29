@@ -29,13 +29,11 @@ func CreateAmoClient() {
 		fmt.Println("failed to get auth url:", err)
 		return
 	}
-
 	fmt.Println("Redirect user to this URL:")
 	fmt.Println(authURL)
 
-	if err := amoCRM.SetDomain("https://onviz-api.ru/amo_deal"); err != nil {
+	if err := amoCRM.SetDomain("https://onvizbitrix.amocrm.ru"); err != nil {
 		fmt.Println("set domain:", err)
-
 		return
 	}
 
