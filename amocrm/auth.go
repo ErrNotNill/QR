@@ -2,7 +2,6 @@ package amocrm
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"github.com/alexeykhan/amocrm"
 	"io"
@@ -17,7 +16,7 @@ type Token struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
-func GetToken(r *http.Request) {
+func GetToken() {
 	uri := `https://onvizbitrix.amocrm.ru/oauth2/access_token`
 	clientID := "dc7037a7-7f4e-4c5c-bbad-a93d1b3774d5"
 	clientSecret := "fhieUsfUTyKmlROK7KeumLDQLb6VvCc1c7WI2f8GHo8xmpLhyrgLN1GwPsUR4CCB"
@@ -45,13 +44,23 @@ func GetToken(r *http.Request) {
 	}
 	defer resp.Body.Close()
 
-	var token Token
+	bodyRead, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	// 'body' now contains the response data as a byte slice
+	// You can convert it to a string if needed
+	responseText := string(bodyRead)
+	fmt.Println("responseText: ", responseText)
+	/*var token Token
 	bs, _ := io.ReadAll(r.Body)
 	jsonData := json.Unmarshal(bs, &token)
 	if jsonData != nil {
 		fmt.Println("Message received successfully")
 	}
-	log.Println("response:", token)
+	log.Println("response:", token)*/
 }
 
 func CreateAmoClient() {
