@@ -8,18 +8,15 @@ import (
 )
 
 func InitRoutes() {
-
 	http.HandleFunc("/generate", qr.HandleRequest)
-
-	http.HandleFunc("/token", amocrm.GetTokenHandler)
-	http.HandleFunc("/refresh_token", amocrm.RefreshTokenAuthHandler)
+	http.HandleFunc("/send_sms", exolve.SendSms)
 
 	http.HandleFunc("/deal", amocrm.DealCreateHandler)
 	http.HandleFunc("/deal_contact", amocrm.CreateDealAndContactHandler)
 	http.HandleFunc("/get_deals", amocrm.GetDeals)
 
+	//this routes for testing requests
 	//http.HandleFunc("/redirect", amocrm.RedirectHandler)
-
-	http.HandleFunc("/send_sms", exolve.SendSms)
-
+	//http.HandleFunc("/token", amocrm.GetTokenHandler)
+	//http.HandleFunc("/refresh_token", amocrm.RefreshTokenAuthHandler)
 }

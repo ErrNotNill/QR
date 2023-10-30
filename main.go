@@ -1,25 +1,28 @@
 package main
 
 import (
+	"log"
 	"net/http"
-	"qr/qr"
 	"qr/router"
 )
 
 func main() {
 
-	qr.CreateQR()
+	//phoneField := settings.FindCustomFields("Чат")
+	//webhookUrl := settings.FindSettings("DatabaseUrl")
+
+	//qr.CreateQR()
 
 	router.InitRoutes()
-
-	//amocrm.GetToken() //1
-
-	//amocrm.CreateComplexDealAndContact() //2
+	//amocrm.GetToken()
+	//amocrm.CreateDealAndContact()
 
 	//amocrm.DealCreate()
 
 	//amocrm.RefreshTokenAuth()
 
-	http.ListenAndServe(":9090", nil)
-
+	if err := http.ListenAndServe(":9090", nil); err != nil {
+		log.Println(err.Error())
+		return
+	}
 }

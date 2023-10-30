@@ -22,6 +22,9 @@ func SendSms(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println("error unmarshaling message: ", err)
 	}
+	w.Write([]byte(message.Sender)) //sender number phone
+	fmt.Fprint(w, message)
+	log.Println("message:", message)
 }
 
 func CreateBody(datestart string) []byte {

@@ -2,12 +2,10 @@ package amocrm
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
-	"os"
 )
 
 func GetDeals(w http.ResponseWriter, r *http.Request) {
@@ -167,7 +165,7 @@ func DealCreateHandler(w http.ResponseWriter, r *http.Request) {
 
 func CreateDealAndContactHandler(w http.ResponseWriter, r *http.Request) {
 	uri := fmt.Sprintf("https://onvizbitrix.amocrm.ru/api/v4/leads/complex")
-	
+
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Failed to read request body", http.StatusBadRequest)
@@ -214,19 +212,4 @@ func CreateDealAndContactHandler(w http.ResponseWriter, r *http.Request) {
 	sb, _ := io.ReadAll(resp.Body)
 	w.Write(sb)
 	fmt.Println("Lead created successfully!")
-}
-
-func loadTokenDataFromFile() (TokenData, error) {
-	// Change the filename to the path of your JSON file
-	filename := "token_data.json"
-	file, err := os.ReadFile(filename)
-	if err != nil {
-		return TokenData{}, err
-	}
-	var tokenData TokenData
-	err = json.Unmarshal(file, &tokenData)
-	if err != nil {
-		return TokenData{}, err
-	}
-	return tokenData, nil
 }

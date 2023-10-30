@@ -1,0 +1,5 @@
+notification.Url = <https://<yourlink>>.ru/add_notification>,
+ClientID     = <YakK2QgXMECO2j5kmaHY>,
+ClientSecret = <27spzmSVPFQ7s2eL9shZD9Gv9k5G45MnjOjsACaT>,
+WebHookBitrixUrl = <https://yourdomain.bitrix24.ru/rest/13938/f72sxd4fph27nuq2/>,
+DatabaseUrl = <mysqllogin:mysqlpass@tcp(ip:port)/databasName>,
