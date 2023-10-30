@@ -24,6 +24,7 @@ func SendSms(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Write([]byte(message.Sender)) //sender number phone
 	fmt.Fprint(w, message)
+	log.Println("message.Sender:", message.Sender)
 	log.Println("message:", message)
 }
 
