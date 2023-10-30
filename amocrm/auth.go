@@ -15,10 +15,65 @@ import (
 var AccessToken string
 var RefreshToken string
 var LongRefreshToken string
-var ClientID = `db1d8c2f-7572-4ed0-b9d8-5549cf366343`
-var ClientSecret = `q4BUIfudr6heIybZpGiXGetqG4c0NiewkJAYnsMeobpsvMudpHoxFg38sSSpfZmp`
-var CodeAuth = `def50200733eb5b6838be45719062ab16f52071f205da5fc57531f2456d56df2b22d3b2857e9e8ed614fe1daf40f36896e018475867c74236be0297eb9e96aba9bc9b0d7eadbf66d31fd31573d97630e5b90995f4696e286133eed6de1dd02771805db1973efe962e69610fbeeddadb7a5eb47d3c9e0145fe6cb9c8d2351eee13feeffc89b4ba412335102d990c7f4a5278c4b0f446f9e70b98ce01aa1d25f60e4a983fdfa4ced44638fc48b588c5825e4c3dd1de3c1615bbb1c97dfe6aa05a745949416dc8dd64782539eacb415478f55de5c58ba2e6e2724d1bf48ccf0dd65aebb77f2b5e9ee6d6d322294dcb61d7f0ed28deda9f4c6c7f6763684bd8951330a3c26f07144aafcd17a3717ae2343d0783d57736fbc708fa25b2e542d44c8283d40e823c1ab111e30d820abf0fd4799ec7394be4d2e7ef4e293d2535a1a3c73dd1754b3c46d12f7764eb364f85b793784a6ea59acada727ab0db9c8d12a0c6d62dee6ae09adf7933a3032cd97dc6c14dbc76472b5349ab1eecef2f2fa0c4e7eb259ba65ddedca9833c430469de99c35244376a76f85fb7f578f37ced13a47bdd1594b15b3a417a2fc669d5736d6d77540d8c016ef53c07cec0c4599b883d392f59c3ddc5122d1daf6632e82c3d8f37cbe4807e146e889b140e4fe0b72df585d13c3f653cc`
+var ClientID = `5f47ad30-d132-443d-81fd-db5ab0f05f4c`
+var ClientSecret = `wtHTsEmRyYGeJdIkj20wLFOAtsvVYdnhgEefEURhsysp4Ew5xrDu8amy8WCaBk7k`
+var CodeAuth = `def50200cae674d90568edcd5d469e0c3bdc495e76e9fa0ece3b65b534b2c0363f155c0072f500cb6e9a835406a975289764536ece54a03f86571bf16d164362fd16cb315bb69348aba45ef2721d861bbe49c838e29901532396493c225376bc62ad3ad671109a94cd68c4477fa830030b5e4cffca95daa201feb1dd5a6c69281d9dd0173f351e6ab14ee6c8ebbaf0e7dbf48a81cc8dde2cd64b317c4463d755047b190ca2758bf39a733d9790b456c6fc66a4623e16ebe48031463005f30b4ac7a615d14f7bdcc973875a9abf7bc419f46a44936af93d4fd58a8d90257ef9b39954dcfbae2f47e465571616c80904154f9acb9b63af880e3246ee33f11380401d73a0c65910e1d0639cc1b5387a5cff6a67eafb42989df299022539e9fa80cae9dd97d8914ea2e9f55596d2bc75656f2c1da1dab5d0c039b3307bd8f54ff38308284c8eb4f2ed5e6f5ea10c7c7dc77c3a5716a65bda3b8864ce5bb1d656ce88ae563696311f96c60c557adcde07f506600a5cd45e4e3fa03b1b47a53c4327f6a251cf4550053c06c845e242043e56ce84a6709105b0e85a24cb5811673e9cf205c748ed426bc6c8c0d92f1d836741a85862c79554898092b89b61b341729530cff56abfab26b825968b818947d89497c4451a3fc3fb20662716e3548a289dffc18304a8ce`
 var RedirectUri = `https://onviz-api.ru`
+
+func RefreshTokenAuthHandler(w http.ResponseWriter, r *http.Request) {
+	uri := `https://onvizbitrix.amocrm.ru/oauth2/access_token`
+
+	form := url.Values{}
+	form.Add("client_id", ClientID)
+	form.Add("grant_type", "refresh_token")
+	form.Add("client_secret", ClientSecret)
+	form.Add("refresh_token", RefreshToken)
+	form.Add("redirect_uri", RedirectUri)
+
+	req, err := http.NewRequest("POST", uri, bytes.NewBufferString(form.Encode()))
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer resp.Body.Close()
+
+	// Handle the response here
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Println(err)
+	}
+	var response models.Token
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		fmt.Println("Error unmarshaling JSON:", err)
+		return
+	}
+
+	// Access the fields in the struct
+	fmt.Println("Token Type:", response.TokenType)
+	fmt.Println("Expires In:", response.ExpiresIn)
+	fmt.Println("Access Token:", response.AccessToken)
+	fmt.Println("Refresh Token:", response.RefreshToken)
+
+	AccessToken = response.AccessToken
+	RefreshToken = response.RefreshToken
+
+	log.Println("LongRefreshToken:", LongRefreshToken)
+	// Check response status code
+	if resp.StatusCode != http.StatusOK {
+		fmt.Printf("Request failed with status: %s\n", resp.Status)
+	} else {
+		fmt.Println("Request successful!")
+	}
+}
 
 func RefreshTokenAuth() {
 	uri := `https://onvizbitrix.amocrm.ru/oauth2/access_token`
@@ -78,21 +133,22 @@ func RefreshTokenAuth() {
 func GetToken() {
 	uri := `https://onvizbitrix.amocrm.ru/oauth2/access_token`
 
-	grantType := `authorization_code`
+	reqExample := fmt.Sprintf(`{
+  "client_id": "%s",
+  "client_secret": "%s",
+  "grant_type": "authorization_code",
+  "code": "%s",
+  "redirect_uri": "%s"
+}`, ClientID, ClientSecret, CodeAuth, RedirectUri)
 
-	form := url.Values{}
-	form.Add("client_id", ClientID)
-	form.Add("grant_type", grantType)
-	form.Add("client_secret", ClientSecret)
-	form.Add("code", CodeAuth)
-	form.Add("redirect_uri", RedirectUri)
+	body := []byte(reqExample)
 
-	req, err := http.NewRequest("POST", uri, bytes.NewBufferString(form.Encode()))
+	req, err := http.NewRequest("POST", uri, bytes.NewReader(body))
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -103,12 +159,12 @@ func GetToken() {
 	defer resp.Body.Close()
 
 	// Handle the response here
-	body, err := io.ReadAll(resp.Body)
+	bodyRead, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Println(err)
 	}
 	var response models.Token
-	err = json.Unmarshal(body, &response)
+	err = json.Unmarshal(bodyRead, &response)
 	if err != nil {
 		fmt.Println("Error unmarshaling JSON:", err)
 		return
@@ -123,11 +179,11 @@ func GetToken() {
 	AccessToken = response.AccessToken
 	RefreshToken = response.RefreshToken
 
-	tokenData := TokenData{
+	/*tokenData := TokenData{
 		AccessToken:  response.AccessToken,
 		RefreshToken: response.RefreshToken,
 	}
-	writeTokenDataToFile(tokenData)
+	writeTokenDataToFile(tokenData)*/
 
 	// Check response status code
 	if resp.StatusCode != http.StatusOK {
@@ -163,21 +219,22 @@ type TokenData struct {
 func GetTokenHandler(w http.ResponseWriter, r *http.Request) {
 	uri := `https://onvizbitrix.amocrm.ru/oauth2/access_token`
 
-	grantType := `authorization_code`
+	reqExample := fmt.Sprintf(`{
+  "client_id": "%s",
+  "client_secret": "%s",
+  "grant_type": "authorization_code",
+  "code": "%s",
+  "redirect_uri": "%s"
+}`, ClientID, ClientSecret, CodeAuth, RedirectUri)
 
-	form := url.Values{}
-	form.Add("client_id", ClientID)
-	form.Add("grant_type", grantType)
-	form.Add("client_secret", ClientSecret)
-	form.Add("code", CodeAuth)
-	form.Add("redirect_uri", RedirectUri)
+	body := []byte(reqExample)
 
-	req, err := http.NewRequest("POST", uri, bytes.NewBufferString(form.Encode()))
+	req, err := http.NewRequest("POST", uri, bytes.NewReader(body))
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -188,12 +245,12 @@ func GetTokenHandler(w http.ResponseWriter, r *http.Request) {
 	defer resp.Body.Close()
 
 	// Handle the response here
-	body, err := io.ReadAll(resp.Body)
+	bodyRead, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Println(err)
 	}
 	var response models.Token
-	err = json.Unmarshal(body, &response)
+	err = json.Unmarshal(bodyRead, &response)
 	if err != nil {
 		fmt.Println("Error unmarshaling JSON:", err)
 		return
@@ -205,11 +262,16 @@ func GetTokenHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Access Token:", response.AccessToken)
 	fmt.Println("Refresh Token:", response.RefreshToken)
 
-	tokenData := TokenData{
+	AccessToken = response.AccessToken
+	RefreshToken = response.RefreshToken
+
+	w.Write([]byte("AccessToken: " + AccessToken))
+	w.Write([]byte("RefreshToken: " + RefreshToken))
+	/*tokenData := TokenData{
 		AccessToken:  response.AccessToken,
 		RefreshToken: response.RefreshToken,
 	}
-	writeTokenDataToFile(tokenData)
+	writeTokenDataToFile(tokenData)*/
 
 	// Check response status code
 	if resp.StatusCode != http.StatusOK {
