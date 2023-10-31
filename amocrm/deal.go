@@ -6,18 +6,19 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"qr/settings"
 )
 
 func GetDeals(w http.ResponseWriter, r *http.Request) {
 	//tokenData, err := loadTokenDataFromFile()
-	uri := `https://onvizbitrix.amocrm.ru/api/v4/leads`
+	uri := fmt.Sprintf(`https://%s.amocrm.ru/api/v4/leads`, settings.Subdomain)
 	req, err := http.NewRequest("GET", uri, nil)
 	if err != nil {
 		fmt.Println("Error creating request:", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 	//fmt.Println("tokenData.AccessToken:::", tokenData.AccessToken)
-	req.Header.Set("Authorization", "Bearer "+AccessToken)
+	req.Header.Set("Authorization", "Bearer "+settings.AccessToken)
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -29,18 +30,22 @@ func GetDeals(w http.ResponseWriter, r *http.Request) {
 	w.Write(response)
 }
 
-func CreateDealAndContact() {
-	uri := fmt.Sprintf("https://onvizbitrix.amocrm.ru/api/v4/leads/complex")
+func CreateDealAndContact(sender string) {
+	uri := fmt.Sprintf("https://%s.amocrm.ru/api/v4/leads/complex", settings.Subdomain)
+
 	leadData := fmt.Sprintf(`[
-	    {
-	        "name": "Сделка для примера 1",
-	        "price": 20000,
-	    },
-	    {
-	        "name": "Сделка для примера 2",
-	        "price": 10000,
-	    }
-	]`)
+   {
+      "name": "Сбор номеров по QR",
+      "_embedded":{
+         "contacts":[
+            {
+               "first_name":"QR-Клиент",
+              "custom_fields_values":[
+                  {
+                     "field_id":%s,
+                     "values":[
+                        {
+                           "value":"+%s"}]}]}]}}]`, settings.CrmPhoneField, sender)
 	body := []byte(leadData)
 	/*jsonData, err := json.Marshal(leadData)
 	if err != nil {
@@ -56,7 +61,7 @@ func CreateDealAndContact() {
 		return
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+AccessToken)
+	req.Header.Set("Authorization", "Bearer "+settings.AccessToken)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -72,7 +77,7 @@ func CreateDealAndContact() {
 }
 
 func DealCreate() {
-	uri := fmt.Sprintf("https://onvizbitrix.amocrm.ru/api/v4/leads")
+	uri := fmt.Sprintf("https://%s.amocrm.ru/api/v4/leads", settings.Subdomain)
 	leadData := fmt.Sprintf(`[
 	    {
 	        "name": "Сделка для примера 1",
@@ -98,7 +103,7 @@ func DealCreate() {
 		return
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+AccessToken)
+	req.Header.Set("Authorization", "Bearer "+settings.AccessToken)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -114,7 +119,7 @@ func DealCreate() {
 }
 
 func DealCreateHandler(w http.ResponseWriter, r *http.Request) {
-	uri := fmt.Sprintf("https://onvizbitrix.amocrm.ru/api/v4/leads")
+	uri := fmt.Sprintf("https://%s.amocrm.ru/api/v4/leads", settings.Subdomain)
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Failed to read request body", http.StatusBadRequest)
@@ -146,7 +151,7 @@ func DealCreateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+AccessToken)
+	req.Header.Set("Authorization", "Bearer "+settings.AccessToken)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -164,7 +169,7 @@ func DealCreateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func CreateDealAndContactHandler(w http.ResponseWriter, r *http.Request) {
-	uri := fmt.Sprintf("https://onvizbitrix.amocrm.ru/api/v4/leads/complex")
+	uri := fmt.Sprintf("https://%s.amocrm.ru/api/v4/leads/complex", settings.Subdomain)
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -197,7 +202,7 @@ func CreateDealAndContactHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+AccessToken)
+	req.Header.Set("Authorization", "Bearer "+settings.AccessToken)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
