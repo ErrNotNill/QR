@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"qr/amocrm/models"
+	"qr/settings"
 )
 
 func GetTokenHandler(w http.ResponseWriter, r *http.Request) {
@@ -20,7 +21,7 @@ func GetTokenHandler(w http.ResponseWriter, r *http.Request) {
   "grant_type": "authorization_code",
   "code": "%s",
   "redirect_uri": "%s"
-}`, ClientID, ClientSecret, CodeAuth, RedirectUri)
+}`, settings.ClientID, settings.ClientSecret, settings.CodeAuth, settings.RedirectUri)
 
 	body := []byte(reqExample)
 
@@ -55,11 +56,11 @@ func GetTokenHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Access Token:", response.AccessToken)
 	fmt.Println("Refresh Token:", response.RefreshToken)
 
-	AccessToken = response.AccessToken
-	RefreshToken = response.RefreshToken
+	settings.AccessToken = response.AccessToken
+	settings.RefreshToken = response.RefreshToken
 
-	w.Write([]byte("AccessToken: " + AccessToken))
-	w.Write([]byte("RefreshToken: " + RefreshToken))
+	w.Write([]byte("AccessToken: " + settings.AccessToken))
+	w.Write([]byte("RefreshToken: " + settings.RefreshToken))
 
 	if resp.StatusCode != http.StatusOK {
 		fmt.Printf("Request failed with status: %s\n", resp.Status)
@@ -72,11 +73,11 @@ func RefreshTokenAuthHandler(w http.ResponseWriter, r *http.Request) {
 	uri := `https://onvizbitrix.amocrm.ru/oauth2/access_token`
 
 	form := url.Values{}
-	form.Add("client_id", ClientID)
+	form.Add("client_id", settings.ClientID)
 	form.Add("grant_type", "refresh_token")
-	form.Add("client_secret", ClientSecret)
-	form.Add("refresh_token", RefreshToken)
-	form.Add("redirect_uri", RedirectUri)
+	form.Add("client_secret", settings.ClientSecret)
+	form.Add("refresh_token", settings.RefreshToken)
+	form.Add("redirect_uri", settings.RedirectUri)
 
 	req, err := http.NewRequest("POST", uri, bytes.NewBufferString(form.Encode()))
 	if err != nil {
@@ -109,10 +110,10 @@ func RefreshTokenAuthHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Access Token:", response.AccessToken)
 	fmt.Println("Refresh Token:", response.RefreshToken)
 
-	AccessToken = response.AccessToken
-	RefreshToken = response.RefreshToken
+	settings.AccessToken = response.AccessToken
+	settings.RefreshToken = response.RefreshToken
 
-	log.Println("LongRefreshToken:", LongRefreshToken)
+	log.Println("LongRefreshToken:", settings.LongRefreshToken)
 
 	if resp.StatusCode != http.StatusOK {
 		fmt.Printf("Request failed with status: %s\n", resp.Status)
